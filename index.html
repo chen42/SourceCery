@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Source-cery</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* CSS Variables for Theming */
+        :root { /* Default Light Theme */
+            --bg-color: #f4f7f9; --panel-bg-color: #ffffff; --text-color: #2d3748;
+            --header-color: #1a202c; --border-color: #ddd; --resizer-color: #e0e4e8;
+            --resizer-hover-color: #c8d0d8; --control-bg-color: #e2e8f0; --accent-color: #007bff;
+            --accent-bg-color: #e9f5ff; --accent-bg-hover-color: #d1eaff; --authoryear-color: #4a5568;
+            --authoryear-bg-color: #edf2f7;
+        }
+        body.theme-solarized-light {
+            --bg-color: #fdf6e3; --panel-bg-color: #eee8d5; --text-color: #657b83;
+            --header-color: #073642; --border-color: #93a1a1; --resizer-color: #eee8d5;
+            --resizer-hover-color: #93a1a1; --control-bg-color: #eee8d5; --accent-color: #268bd2;
+            --accent-bg-color: #fdf6e3; --accent-bg-hover-color: #eee8d5; --authoryear-color: #586e75;
+            --authoryear-bg-color: #fdf6e3;
+        }
+        body.theme-nord-dark {
+            --bg-color: #2E3440; --panel-bg-color: #3B4252; --text-color: #D8DEE9;
+            --header-color: #ECEFF4; --border-color: #4C566A; --resizer-color: #434C5E;
+            --resizer-hover-color: #4C566A; --control-bg-color: #434C5E; --accent-color: #88C0D0;
+            --accent-bg-color: #434C5E; --accent-bg-hover-color: #4C566A; --authoryear-color: #E5E9F0;
+            --authoryear-bg-color: #434C5E;
+        }
+        body.theme-dracula-dark {
+            --bg-color: #282a36; --panel-bg-color: #343746; --text-color: #f8f8f2;
+            --header-color: #f8f8f2; --border-color: #44475a; --resizer-color: #44475a;
+            --resizer-hover-color: #6272a4; --control-bg-color: #44475a; --accent-color: #bd93f9;
+            --accent-bg-color: #44475a; --accent-bg-hover-color: #6272a4; --authoryear-color: #f1fa8c;
+            --authoryear-bg-color: #44475a;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0; padding: 20px; background-color: var(--bg-color); color: var(--text-color);
+            user-select: none; transition: background-color 0.2s, color 0.2s;
+        }
+        h1, h2 { text-align: center; color: var(--header-color); }
+        h2 { text-align: left; margin-top: 0; font-size: 1.2em; }
+        
+        .controls-bar {
+            display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+            gap: 20px; margin-bottom: 20px; padding: 10px; border-radius: 8px;
+            background-color: var(--panel-bg-color); border: 1px solid var(--border-color);
+        }
+        .control-group { display: flex; align-items: center; gap: 10px; }
+        .controls-bar label { font-weight: bold; font-size: 0.9em; white-space: nowrap; }
+        .controls-bar select, .controls-bar button {
+            background-color: var(--control-bg-color); color: var(--text-color);
+            border: 1px solid var(--border-color); border-radius: 5px; padding: 5px 10px;
+            font-size: 0.9em; cursor: pointer;
+        }
+        .controls-bar button { width: 40px; }
+        
+        .container {
+            display: flex; border: 1px solid var(--border-color);
+            border-radius: 8px; height: 75vh; background-color: var(--panel-bg-color); overflow: hidden;
+        }
+        .panel { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; flex-grow: 0; flex-shrink: 1; }
+        #left-panel { flex-basis: 50%; }
+        #right-panel { flex-grow: 1; flex-basis: 50%; }
+        #resizer { flex-basis: 10px; flex-shrink: 0; background-color: var(--resizer-color); cursor: col-resize; border-left: 1px solid var(--border-color); border-right: 1px solid var(--border-color); }
+        #resizer:hover { background-color: var(--resizer-hover-color); }
+        
+        #latex-input {
+            width: 100%; height: 100%; border: 1px solid var(--border-color);
+            border-radius: 4px; padding: 10px; resize: none; box-sizing: border-box; 
+            background-color: var(--bg-color); color: var(--text-color); font-family: 'Roboto', sans-serif;
+        }
+        #citations-output {
+            line-height: 1.6; white-space: pre-wrap; word-wrap: break-word;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        #citations-output .citation-group .authoryear {
+            font-family: 'Roboto', sans-serif; font-size: 0.9em; 
+            color: var(--authoryear-color); background-color: var(--authoryear-bg-color);
+            padding: 2px 5px; border-radius: 4px; margin-right: 5px;
+        }
+        #citations-output a {
+            text-decoration: none; color: var(--accent-color); font-weight: bold;
+            background-color: var(--accent-bg-color); padding: 2px 4px; border-radius: 4px;
+            transition: background-color 0.2s; cursor: pointer;
+        }
+        #citations-output a:hover { background-color: var(--accent-bg-hover-color); text-decoration: underline; }
+        
+        #tooltip {
+            display: none; position: absolute; background-color: var(--panel-bg-color);
+            border: 1px solid var(--border-color); border-radius: 6px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            padding: 15px; z-index: 1000; pointer-events: none;
+            line-height: 1.5; color: var(--text-color);
+        }
+        #tooltip .title { font-weight: bold; color: var(--header-color); margin-bottom: 8px; }
+        #tooltip .authors { font-style: italic; margin-bottom: 8px; }
+        #tooltip .journal { font-size: 0.9em; margin-bottom: 12px; }
+        #tooltip .abstract { font-size: 0.95em; max-height: 400px; overflow-y: auto; border-top: 1px solid var(--border-color); padding-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <h1>Source-cery ✨</h1>
+
+    <div class="controls-bar">
+        <div class="control-group">
+            <label for="theme-switcher">Theme:</label>
+            <select id="theme-switcher">
+                <option value="theme-nord-dark">Nord Dark</option>
+                <option value="theme-dracula-dark">Dracula Dark</option>
+                <option value="theme-default-light">Default Light</option>
+                <option value="theme-solarized-light">Solarized Light</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label>Font Size:</label>
+            <button id="font-decrease">-</button>
+            <button id="font-increase">+</button>
+        </div>
+        <div class="control-group">
+            <label>Tooltip Width:</label>
+            <button id="tooltip-decrease">-</button>
+            <button id="tooltip-increase">+</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="panel" id="left-panel">
+            <h2>Source Text</h2>
+            <textarea id="latex-input" placeholder="Paste your text with citations here..."></textarea>
+        </div>
+        <div id="resizer"></div>
+        <div class="panel" id="right-panel">
+            <h2>Interactive View</h2>
+            <div id="citations-output"></div>
+        </div>
+    </div>
+
+    <div id="tooltip"></div>
+
+    <script>
+        // --- DOM Element References ---
+        const latexInput = document.getElementById('latex-input');
+        const citationsOutput = document.getElementById('citations-output');
+        const tooltip = document.getElementById('tooltip');
+        
+        const pmidCache = {};
+        let debounceTimer;
+        const masterRegex = /(\\cite[a-zA-Z]*?\{[^}]+\})|(\(PMID:\s*[^)]+\))|(pmid\d+)/gi;
+
+        // --- Core Citation Logic ---
+        const parseAndRenderCitations = async () => {
+            citationsOutput.innerHTML = 'Parsing and fetching citation data...';
+            const text = latexInput.value;
+            let safeText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            const pmidsToFetch = new Set();
+            safeText.replace(masterRegex, (match) => {
+                const pmids = (match.match(/\d+/g) || []);
+                pmids.forEach(pmid => { if (!pmidCache[pmid]) pmidsToFetch.add(pmid); });
+            });
+            if (pmidsToFetch.size > 0) await fetchBatchPmidData(Array.from(pmidsToFetch));
+            const newHtml = safeText.replace(masterRegex, (fullMatch) => buildRichCitationHtml(fullMatch));
+            citationsOutput.innerHTML = newHtml;
+        };
+
+        const fetchBatchPmidData = async (pmidArray) => {
+            if (pmidArray.length === 0) return;
+            try {
+                const response = await fetch(`https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=${pmidArray.join(',')}`);
+                const xmlText = await response.text();
+                const xmlDoc = new DOMParser().parseFromString(xmlText, "text/xml");
+                xmlDoc.querySelectorAll('PubmedArticle').forEach(article => {
+                    const pmid = article.querySelector('PMID')?.textContent;
+                    if (!pmid) return;
+                    
+                    const firstAuthorLastName = article.querySelector('Author LastName')?.textContent || 'N/A';
+                    const year = article.querySelector('PubDate Year')?.textContent || 'N/A';
+                    const title = article.querySelector('ArticleTitle')?.textContent || 'No Title Found';
+                    const abstractText = Array.from(article.querySelectorAll('AbstractText')).map(el => el.textContent).join('\n') || 'No Abstract Found.';
+                    
+                    // NEW: Smart Author List Logic
+                    const authorsArray = Array.from(article.querySelectorAll('Author')).map(author => 
+                        `${author.querySelector('LastName')?.textContent || ''} ${author.querySelector('Initials')?.textContent || ''}`.trim()
+                    );
+                    let displayAuthors;
+                    if (authorsArray.length > 3) {
+                        displayAuthors = `${authorsArray[0]}, ..., ${authorsArray[authorsArray.length - 1]}`;
+                    } else {
+                        displayAuthors = authorsArray.join(', ');
+                    }
+
+                    const journal = article.querySelector('Journal Title')?.textContent || '';
+                    pmidCache[pmid] = { authorYear: `${firstAuthorLastName} ${year}`, tooltipData: { title, authors: displayAuthors, journal: `${journal} (${year})`, abstract: abstractText }};
+                });
+            } catch (error) {
+                console.error("Failed to fetch batch PMID data:", error);
+                pmidArray.forEach(pmid => { pmidCache[pmid] = { authorYear: 'Error', tooltipData: null }; });
+            }
+        };
+
+        const buildRichCitationHtml = (fullMatch) => {
+            const lowerMatch = fullMatch.toLowerCase();
+            const pmidNumbers = fullMatch.match(/\d+/g) || [];
+            if (pmidNumbers.length === 0 && !lowerMatch.includes('cite')) return fullMatch;
+            if (!lowerMatch.startsWith('\\cite')) {
+                const parts = pmidNumbers.map(pmid => {
+                    const cacheEntry = pmidCache[pmid];
+                    const authorYearTag = cacheEntry ? `<span class="authoryear">[${cacheEntry.authorYear}]</span>` : '';
+                    return `${authorYearTag}<a href="https://pubmed.ncbi.nlm.nih.gov/${pmid}/" target="_blank" data-pmid="${pmid}">${pmid}</a>`;
+                });
+                return `<span class="citation-group">${parts.join(', ')}</span>`;
+            }
+            const commandPart = fullMatch.substring(0, fullMatch.indexOf('{') + 1);
+            const contentPart = fullMatch.match(/\{([^}]+)\}/)[1];
+            const items = contentPart.split(',').map(item => item.trim()).filter(Boolean);
+            const richItems = items.map(item => {
+                const pmid = item.toLowerCase().replace('pmid', '');
+                if (!isNaN(pmid) && pmidCache[pmid]) {
+                    const cacheEntry = pmidCache[pmid];
+                    const authorYearTag = `<span class="authoryear">[${cacheEntry.authorYear}]</span>`;
+                    return `${authorYearTag}<a href="https://pubmed.ncbi.nlm.nih.gov/${pmid}/" target="_blank" data-pmid="${pmid}">${item}</a>`;
+                }
+                return item;
+            });
+            return `${commandPart}${richItems.join(', ')} }`;
+        };
+
+        const showTooltip = (pmid, event) => {
+            const cacheEntry = pmidCache[pmid];
+            tooltip.innerHTML = (cacheEntry && cacheEntry.tooltipData)
+                ? `<div class="title">${cacheEntry.tooltipData.title}</div><div class="authors">${cacheEntry.tooltipData.authors}</div><div class="journal">${cacheEntry.tooltipData.journal}</div><div class="abstract">${cacheEntry.tooltipData.abstract}</div>`
+                : `Info for PMID:${pmid} not found or failed to load.`;
+            tooltip.style.left = `${event.pageX + 15}px`;
+            tooltip.style.top = `${event.pageY + 15}px`;
+            tooltip.style.display = 'block';
+        };
+
+        // --- Resizer Logic ---
+        const resizer = document.getElementById('resizer');
+        const leftPanel = document.getElementById('left-panel');
+        let isResizing = false;
+        resizer.addEventListener('mousedown', (e) => { e.preventDefault(); isResizing = true; document.addEventListener('mousemove', handleMouseMove); document.addEventListener('mouseup', stopResize); });
+        const handleMouseMove = (e) => { if (!isResizing) return; const containerLeft = resizer.parentElement.getBoundingClientRect().left; leftPanel.style.flexBasis = `${e.clientX - containerLeft}px`; };
+        const stopResize = () => { isResizing = false; document.removeEventListener('mousemove', handleMouseMove); document.removeEventListener('mouseup', stopResize); };
+        
+        // --- Event Listeners ---
+        latexInput.addEventListener('input', () => { clearTimeout(debounceTimer); debounceTimer = setTimeout(parseAndRenderCitations, 500); });
+        citationsOutput.addEventListener('mouseover', (e) => { if (e.target.tagName === 'A' && e.target.dataset.pmid) showTooltip(e.target.dataset.pmid, e); });
+        citationsOutput.addEventListener('mouseout', () => { tooltip.style.display = 'none'; });
+        citationsOutput.addEventListener('mousemove', (e) => { if (tooltip.style.display === 'block') { tooltip.style.left = `${e.pageX + 15}px`; tooltip.style.top = `${e.pageY + 15}px`; }});
+        
+        // --- UI Controls Logic ---
+        const themeSwitcher = document.getElementById('theme-switcher');
+        const fontIncreaseBtn = document.getElementById('font-increase');
+        const fontDecreaseBtn = document.getElementById('font-decrease');
+        const tooltipIncreaseBtn = document.getElementById('tooltip-increase');
+        const tooltipDecreaseBtn = document.getElementById('tooltip-decrease');
+
+        const themeClasses = ['theme-default-light', 'theme-solarized-light', 'theme-nord-dark', 'theme-dracula-dark'];
+        
+        let currentFontSize = 14;
+        const MIN_FONT_SIZE = 8, MAX_FONT_SIZE = 24;
+
+        let currentTooltipWidth = 450;
+        const MIN_TOOLTIP_WIDTH = 300, MAX_TOOLTIP_WIDTH = 800, TOOLTIP_STEP = 50;
+
+        function applyTheme(themeName) {
+            document.body.classList.remove(...themeClasses);
+            document.body.classList.add(themeName);
+            localStorage.setItem('sourcecery-theme', themeName);
+        }
+
+        function applyFontSize(size) {
+            latexInput.style.fontSize = `${size}px`;
+            citationsOutput.style.fontSize = `${size}px`;
+            tooltip.style.fontSize = `${size}px`; 
+            localStorage.setItem('sourcecery-fontsize', size);
+        }
+
+        function applyTooltipWidth(width) {
+            tooltip.style.maxWidth = `${width}px`;
+            localStorage.setItem('sourcecery-tooltipwidth', width);
+        }
+
+        themeSwitcher.addEventListener('change', (e) => applyTheme(e.target.value));
+        fontIncreaseBtn.addEventListener('click', () => { if (currentFontSize < MAX_FONT_SIZE) { currentFontSize++; applyFontSize(currentFontSize); }});
+        fontDecreaseBtn.addEventListener('click', () => { if (currentFontSize > MIN_FONT_SIZE) { currentFontSize--; applyFontSize(currentFontSize); }});
+        tooltipIncreaseBtn.addEventListener('click', () => { if (currentTooltipWidth < MAX_TOOLTIP_WIDTH) { currentTooltipWidth += TOOLTIP_STEP; applyTooltipWidth(currentTooltipWidth); }});
+        tooltipDecreaseBtn.addEventListener('click', () => { if (currentTooltipWidth > MIN_TOOLTIP_WIDTH) { currentTooltipWidth -= TOOLTIP_STEP; applyTooltipWidth(currentTooltipWidth); }});
+
+        function loadPreferences() {
+            let themeToApply = localStorage.getItem('sourcecery-theme') || 'theme-nord-dark';
+            if (!themeClasses.includes(themeToApply)) themeToApply = 'theme-nord-dark';
+            applyTheme(themeToApply);
+            themeSwitcher.value = themeToApply;
+
+            const savedFontSize = localStorage.getItem('sourcecery-fontsize');
+            if (savedFontSize) currentFontSize = parseInt(savedFontSize, 10);
+            applyFontSize(currentFontSize);
+
+            const savedTooltipWidth = localStorage.getItem('sourcecery-tooltipwidth');
+            if (savedTooltipWidth) currentTooltipWidth = parseInt(savedTooltipWidth, 10);
+            applyTooltipWidth(currentTooltipWidth);
+        }
+        
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPreferences();
+            latexInput.value = `This tool has new features!
+- If a paper has >3 authors, it shows First, ..., Last. (See PMID 31857820)
+- You can now resize the tooltip window.
+- The default theme is Nord Dark.
+
+1. Multi-author paper: \\citep{31857820}
+2. Single-author paper: \\cite{29224669}`;
+            parseAndRenderCitations();
+        });
+    </script>
+</body>
+</html>
