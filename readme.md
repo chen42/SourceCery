@@ -1,8 +1,8 @@
-# Source-cery ✨
+# SourceCery ✨
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Source-cery is a single-file HTML tool for scientific writing. Originally conceived to verify citations in AI-generated summaries, it's an equally powerful companion for human writers needing instant context on their references. It works by fetching and displaying PubMed details on hover—no installation required.
+SourceCery is a single-file HTML tool for scientific writing. Originally conceived to verify citations in AI-generated summaries, it's an equally powerful companion for human writers needing instant context on their references. It works by fetching and displaying PubMed details on hover—no installation required.
 
 ---
 
