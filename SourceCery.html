@@ -563,13 +563,7 @@
       // --- Initial Load ---
       document.addEventListener("DOMContentLoaded", () => {
         loadPreferences();
-        latexInput.value = `This tool has new features!
-- If a paper has >3 authors, it shows First, ..., Last. (See PMID 31857820)
-- You can now resize the tooltip window.
-- The default theme is Nord Dark.
-
-1. Multi-author paper: \\citep{31857820}
-2. Single-author paper: \\cite{29224669}`;
+        latexInput.value = "";
         parseAndRenderCitations();
       });
     </script>
